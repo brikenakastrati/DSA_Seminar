@@ -8,29 +8,32 @@
 ## Instructions to run the code: 
  #### 1.Clone the repository from GitHub:
      git clone https://github.com/brikenakastrati/DSA_Seminar
-#### 2. Install Python
+### 2. Install Python
 Ensure **Python 3.8 or higher** is installed on your system:
  [Download Python from the Official Website](https://www.python.org/downloads/)
 
- #### 3.Create and activate a virtual environment:
+ ### 3.Create and activate a virtual environment:
       python -m venv venv
       source venv/bin/activate  # On Windows: .venv\Scripts\activate
-#### 4. Install Graphviz
+### 4. Install Graphviz
 Download and install **Graphviz** for tree visualizations:
 [Graphviz Downloads and Installation Guide](https://graphviz.org/download/)
+##### Once installed, ensure the Graphviz binary is accessible by adding it to your system's PATH.
 
-#### 5.Install the required libraries:
+### 5.Install the required libraries:
        pip install matplotlib
        pip install graphviz
        pip install numpy
        pip install memory-profiler
 
-#### 6.Generate datasets by running the script:
+### 6.Generate datasets by running the script:
       py datasets/generate_datasets.py
 
-#### 7.Run benchmarks:
+### 7.Run benchmarks:
       py src/benchmark.py
+#### This script will run the performance benchmarks and record the time and memory usage of various AVL tree operations (insert, delete, search) for both reference-based and array-based implementations.
 
 ### 8.Generate performance graphs:
      py graphs/generate_graphs.py
+#### This will generate graphs that show the performance comparison of the two tree implementations in terms of time and memory usage.
       
