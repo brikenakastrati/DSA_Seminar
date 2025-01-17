@@ -4,9 +4,12 @@ import subprocess
 
 def visualize_tree(tree, tree_type="Reference", operation="Visualization"):
     """
-    Visualize the AVL tree using Graphviz.
+    Visualize the AVL tree using Graphviz, with labels for operation and tree type.
     """
     dot = graphviz.Digraph(comment='AVL Tree', format='png')
+
+    # Add a title to the graph with operation (insert, delete, search) and tree type
+    dot.attr(label=f"AVL Tree - {tree_type} | Operation: {operation}", labelloc="t", fontsize="20")
 
     if tree_type == "Reference":
         # Handle reference-based AVL tree visualization
@@ -45,13 +48,13 @@ def visualize_tree(tree, tree_type="Reference", operation="Visualization"):
             add_edges_from_array(array, pos_x=left_pos_x, parent=node_id)
             add_edges_from_array(array, pos_x=right_pos_x, parent=node_id)
 
-        add_edges_from_array(tree.tree)  # Make sure you're using `tree.array` if that is how you're storing it
+        add_edges_from_array(tree.tree)  # Make sure you're using `tree.tree` if that is how you're storing it
 
     # Ensure the output directory exists
     output_dir = r"C:\Users\brike\Desktop\Algoritma\visual"
     os.makedirs(output_dir, exist_ok=True)
 
-    # Generate a unique filename with tree type and operation
+    # Generate a unique filename with tree type, operation, and database size
     output_path = get_unique_filename(output_dir, tree_type, operation, ".png")
 
     # Render the visualization to the specified file path (without the extension, as Graphviz will append '.png')
@@ -60,7 +63,7 @@ def visualize_tree(tree, tree_type="Reference", operation="Visualization"):
 
 def get_unique_filename(folder, tree_type, operation, extension):
     """
-    Generate a unique filename in the specified folder with tree type and operation.
+    Generate a unique filename in the specified folder with tree type, operation, and database size.
     """
     counter = 1
     while True:

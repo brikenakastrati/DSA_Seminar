@@ -65,7 +65,8 @@ def benchmark_operations_with_profiling(tree, dataset, is_reference=False):
         }
 
         # Visualize the tree after each operation (optional, can be commented out if not needed)
-        visualize_tree(tree, tree_type="Reference" if is_reference else "Array")
+        visualize_tree(tree, tree_type="Reference" if is_reference else "Array", operation=operation)
+
 
     return results
 
