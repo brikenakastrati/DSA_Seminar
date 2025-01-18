@@ -1,147 +1,157 @@
+import array
 
-import numpy as np
-
-class AVLTreeArray:
-    def __init__(self):
-        self.tree = np.full(1024, None, dtype=object)  # Preallocate with a fixed size
-
-    def height(self, index):
-        if index >= len(self.tree) or self.tree[index] is None:
-            return 0
-        left_index = 2 * index + 1
-        right_index = 2 * index + 2
-        left_height = self.height(left_index)
-        right_height = self.height(right_index)
-        return 1 + max(left_height, right_height)
-
-    def balance_factor(self, index):
-        if index >= len(self.tree) or self.tree[index] is None:
-            return 0
-        left_index = 2 * index + 1
-        right_index = 2 * index + 2
-        return self.height(left_index) - self.height(right_index)
-
-    def update_height(self, index):
-        if index >= len(self.tree) or self.tree[index] is None:
-            return
-        left_index = 2 * index + 1
-        right_index = 2 * index + 2
-        left_height = self.height(left_index)
-        right_height = self.height(right_index)
-        # Only update the height of the node
-        self.tree[index] = self.tree[index]  # Store the key in the array, height is dynamic
-
-    def left_rotate(self, index):
-        right_index = 2 * index + 2
-        if right_index >= len(self.tree) or self.tree[right_index] is None:
-            return
-
-        # Swap the current node with the right child
-        self.tree[index], self.tree[right_index] = self.tree[right_index], self.tree[index]
-        
-        # Perform rotation to balance the structure
-        left_of_right = 2 * right_index + 1
-        if left_of_right < len(self.tree):
-            self.tree[2 * index + 2] = self.tree[left_of_right]
-
-    def right_rotate(self, index):
-        left_index = 2 * index + 1
-        if left_index >= len(self.tree) or self.tree[left_index] is None:
-            return
-
-        # Swap the current node with the left child
-        self.tree[index], self.tree[left_index] = self.tree[left_index], self.tree[index]
-
-        # Perform rotation to balance the structure
-        right_of_left = 2 * left_index + 2
-        if right_of_left < len(self.tree):
-            self.tree[2 * index + 1] = self.tree[right_of_left]
-
-    def rebalance_upward(self, index):
-        while index >= 0:
-            balance = self.balance_factor(index)
-
-            if balance > 1:  # Left-heavy
-                if self.balance_factor(2 * index + 1) < 0:  # Left-Right case
-                    self.left_rotate(2 * index + 1)
-                self.right_rotate(index)
-
-            elif balance < -1:  # Right-heavy
-                if self.balance_factor(2 * index + 2) > 0:  # Right-Left case
-                    self.right_rotate(2 * index + 2)
-                self.left_rotate(index)
-
-            # Move upward to the parent node
-            if index == 0:
-                break  # Root node
-            index = (index - 1) // 2
+class ArrayAVLTree:
+    def __init__(self, capacity=1000):
+        self.capacity = capacity
+        self.size = 0
+        self.keys = array.array('i', [0] * capacity)
+        self.heights = array.array('i', [0] * capacity)
+        self.left = array.array('i', [-1] * capacity)
+        self.right = array.array('i', [-1] * capacity)
+        self.root = -1
 
     def insert(self, key):
-        index = 0
-        while index < len(self.tree):
-            if self.tree[index] is None:
-                self.tree[index] = key  # Only store the key
-                break
+        self.root = self._insert(self.root, key)
 
-            current_key = self.tree[index]
-            if key < current_key:
-                index = 2 * index + 1
-            else:
-                index = 2 * index + 2
+    def _insert(self, node_index, key):
+        if node_index == -1:
+            if self.size >= self.capacity:
+                raise Exception("Tree is full")
+            node_index = self.size
+            self.keys[node_index] = key
+            self.heights[node_index] = 1
+            self.left[node_index] = -1
+            self.right[node_index] = -1
+            self.size += 1
+            return node_index
 
-            if index >= len(self.tree):
-                self.expand_tree(index)
+        if key < self.keys[node_index]:
+            self.left[node_index] = self._insert(self.left[node_index], key)
+        else:
+            self.right[node_index] = self._insert(self.right[node_index], key)
 
-        self.rebalance_upward(index)
+        self.heights[node_index] = 1 + max(self._get_height(self.left[node_index]),
+                                           self._get_height(self.right[node_index]))
 
-    def expand_tree(self, index):
-        new_size = max(len(self.tree) * 2, index + 1)
-        new_tree = np.full(new_size, None, dtype=object)
-        new_tree[:len(self.tree)] = self.tree
-        self.tree = new_tree
+        balance = self._get_balance(node_index)
 
-    def search(self, key):
-        index = 0
-        while index < len(self.tree) and self.tree[index] is not None:
-            current_key = self.tree[index]
-            if key == current_key:
-                return True
-            elif key < current_key:
-                index = 2 * index + 1
-            else:
-                index = 2 * index + 2
-        return False
+        # Left Left Case
+        if balance > 1 and key < self.keys[self.left[node_index]]:
+            return self._right_rotate(node_index)
+
+        # Right Right Case
+        if balance < -1 and key > self.keys[self.right[node_index]]:
+            return self._left_rotate(node_index)
+
+        # Left Right Case
+        if balance > 1 and key > self.keys[self.left[node_index]]:
+            self.left[node_index] = self._left_rotate(self.left[node_index])
+            return self._right_rotate(node_index)
+
+        # Right Left Case
+        if balance < -1 and key < self.keys[self.right[node_index]]:
+            self.right[node_index] = self._right_rotate(self.right[node_index])
+            return self._left_rotate(node_index)
+
+        return node_index
 
     def delete(self, key):
-        def find_min(index):
-            while 2 * index + 1 < len(self.tree) and self.tree[2 * index + 1] is not None:
-                index = 2 * index + 1
-            return index
+        self.root = self._delete(self.root, key)
 
-        def remove(index):
-            left_index = 2 * index + 1
-            right_index = 2 * index + 2
+    def _delete(self, node_index, key):
+        if node_index == -1:
+            return node_index
 
-            if left_index >= len(self.tree) or self.tree[left_index] is None:
-                return right_index  # Return the index of the right child
-            elif right_index >= len(self.tree) or self.tree[right_index] is None:
-                return left_index  # Return the index of the left child
+        if key < self.keys[node_index]:
+            self.left[node_index] = self._delete(self.left[node_index], key)
+        elif key > self.keys[node_index]:
+            self.right[node_index] = self._delete(self.right[node_index], key)
+        else:
+            if self.left[node_index] == -1:
+                return self.right[node_index]
+            elif self.right[node_index] == -1:
+                return self.left[node_index]
 
-            min_larger_index = find_min(right_index)
-            self.tree[index] = self.tree[min_larger_index]
-            self.tree[min_larger_index] = None
-            return index  # Make sure this is a valid index to continue rebalancing
+            min_node = self._get_min_value_node(self.right[node_index])
+            self.keys[node_index] = self.keys[min_node]
+            self.right[node_index] = self._delete(self.right[node_index], self.keys[min_node])
 
-        index = 0
-        while index < len(self.tree) and self.tree[index] is not None:
-            current_key = self.tree[index]
-            if key == current_key:
-                replacement_index = remove(index)
-                if replacement_index is not None:
-                    # Ensure we're passing a valid integer index to rebalance
-                    self.rebalance_upward(replacement_index)
-                return
-            elif key < current_key:
-                index = 2 * index + 1
-            else:
-                index = 2 * index + 2
+        if node_index == -1:
+            return node_index
+
+        self.heights[node_index] = 1 + max(self._get_height(self.left[node_index]),
+                                           self._get_height(self.right[node_index]))
+
+        balance = self._get_balance(node_index)
+
+        # Left Left Case
+        if balance > 1 and self._get_balance(self.left[node_index]) >= 0:
+            return self._right_rotate(node_index)
+
+        # Right Right Case
+        if balance < -1 and self._get_balance(self.right[node_index]) <= 0:
+            return self._left_rotate(node_index)
+
+        # Left Right Case
+        if balance > 1 and self._get_balance(self.left[node_index]) < 0:
+            self.left[node_index] = self._left_rotate(self.left[node_index])
+            return self._right_rotate(node_index)
+
+        # Right Left Case
+        if balance < -1 and self._get_balance(self.right[node_index]) > 0:
+            self.right[node_index] = self._right_rotate(self.right[node_index])
+            return self._left_rotate(node_index)
+
+        return node_index
+
+    def search(self, key):
+        return self._search(self.root, key)
+
+    def _search(self, node_index, key):
+        if node_index == -1:
+            return -1
+        if self.keys[node_index] == key:
+            return node_index
+        if key < self.keys[node_index]:
+            return self._search(self.left[node_index], key)
+        return self._search(self.right[node_index], key)
+
+    def _get_height(self, node_index):
+        if node_index == -1:
+            return 0
+        return self.heights[node_index]
+
+    def _get_balance(self, node_index):
+        if node_index == -1:
+            return 0
+        return self._get_height(self.left[node_index]) - self._get_height(self.right[node_index])
+
+    def _left_rotate(self, z):
+        y = self.right[z]
+        T2 = self.left[y]
+
+        self.left[y] = z
+        self.right[z] = T2
+
+        self.heights[z] = 1 + max(self._get_height(self.left[z]), self._get_height(self.right[z]))
+        self.heights[y] = 1 + max(self._get_height(self.left[y]), self._get_height(self.right[y]))
+
+        return y
+
+    def _right_rotate(self, z):
+        y = self.left[z]
+        T3 = self.right[y]
+
+        self.right[y] = z
+        self.left[z] = T3
+
+        self.heights[z] = 1 + max(self._get_height(self.left[z]), self._get_height(self.right[z]))
+        self.heights[y] = 1 + max(self._get_height(self.left[y]), self._get_height(self.right[y]))
+
+        return y
+
+    def _get_min_value_node(self, node_index):
+        current = node_index
+        while self.left[current] != -1:
+            current = self.left[current]
+        return current

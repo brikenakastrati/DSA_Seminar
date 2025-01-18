@@ -11,6 +11,7 @@ class AVLTreeReference:
         self.root = None
 
     def insert(self, root, key):
+        # Standard BST insert
         if not root:
             return AVLTreeNode(key)
 
@@ -19,10 +20,13 @@ class AVLTreeReference:
         else:
             root.right = self.insert(root.right, key)
 
+        # Update height of the ancestor node
         root.height = 1 + max(self.get_height(root.left), self.get_height(root.right))
 
+        # Get balance factor to check if the node is unbalanced
         balance = self.get_balance(root)
 
+        # Perform rotations to balance the tree
         # Left Left Case
         if balance > 1 and key < root.left.key:
             return self.right_rotate(root)
@@ -44,30 +48,16 @@ class AVLTreeReference:
         return root
 
     def delete(self, root, key):
-        """
-        Delete one node from the tree, ensuring the root node is never deleted directly.
-        If the key matches the root node, delete one of its child or leaf nodes instead.
-        """
         if not root:
             return root
 
-        if root.key == key:
-            # Delete one of the child or leaf nodes
-            leaf_node, parent = self.find_leaf(root, None)
-            if leaf_node:
-                # Delete the leaf node without printing
-                if parent:
-                    if parent.left == leaf_node:
-                        parent.left = None
-                    elif parent.right == leaf_node:
-                        parent.right = None
-                return root  # Return the root since we don't delete it
-        elif key < root.key:
+        # Standard BST delete
+        if key < root.key:
             root.left = self.delete(root.left, key)
         elif key > root.key:
             root.right = self.delete(root.right, key)
         else:
-            # Perform standard deletion if the node to be deleted is not the root
+            # Node with one child or no child
             if not root.left:
                 temp = root.right
                 root = None
@@ -77,16 +67,18 @@ class AVLTreeReference:
                 root = None
                 return temp
 
+            # Node with two children: Get the inorder successor
             temp = self.get_min_value_node(root.right)
             root.key = temp.key
             root.right = self.delete(root.right, temp.key)
 
-        # Update the height
+        # Update height of the current node
         root.height = 1 + max(self.get_height(root.left), self.get_height(root.right))
 
-        # Rebalance the tree if necessary
+        # Get balance factor to check if the node is unbalanced
         balance = self.get_balance(root)
 
+        # Perform rotations to balance the tree
         # Left Left Case
         if balance > 1 and self.get_balance(root.left) >= 0:
             return self.right_rotate(root)
@@ -107,23 +99,8 @@ class AVLTreeReference:
 
         return root
 
-    def find_leaf(self, node, parent):
-        """
-        Find any leaf node (node with no children) and return it along with its parent.
-        """
-        if not node:
-            return None, None
-        if not node.left and not node.right:
-            return node, parent  # Return the leaf node and its parent
-        # Search for a leaf node in the left subtree first
-        left_leaf, left_parent = self.find_leaf(node.left, node)
-        if left_leaf:
-            return left_leaf, left_parent
-        # If no leaf found in the left subtree, search in the right subtree
-        return self.find_leaf(node.right, node)
-
     def search(self, root, key):
-        # No print statements here, just search and return the result
+        # Standard BST search
         if not root:
             return None
         if root.key == key:
@@ -146,24 +123,30 @@ class AVLTreeReference:
         y = z.right
         T2 = y.left
 
+        # Perform rotation
         y.left = z
         z.right = T2
 
+        # Update heights
         z.height = 1 + max(self.get_height(z.left), self.get_height(z.right))
         y.height = 1 + max(self.get_height(y.left), self.get_height(y.right))
 
+        # Return the new root
         return y
 
     def right_rotate(self, z):
         y = z.left
         T3 = y.right
 
+        # Perform rotation
         y.right = z
         z.left = T3
 
+        # Update heights
         z.height = 1 + max(self.get_height(z.left), self.get_height(z.right))
         y.height = 1 + max(self.get_height(y.left), self.get_height(y.right))
 
+        # Return the new root
         return y
 
     def get_min_value_node(self, root):
