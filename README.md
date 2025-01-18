@@ -23,7 +23,6 @@ Download and install **Graphviz** for tree visualizations:
 ### 5.Install the required libraries:
        pip install matplotlib
        pip install graphviz
-       pip install numpy
        pip install memory-profiler
 
 ### 6.Generate datasets by running the script:
